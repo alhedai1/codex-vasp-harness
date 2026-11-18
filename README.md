@@ -20,9 +20,16 @@ The MIT license applies to this code; obtain VASP and potentials separately.
 
 ## 1. Get the code
 
-Download the repository ZIP or clone its GitHub URL. Run the commands below from
-its root. For a versioned workshop use the published tutorial tag, rather than
-an evolving branch. The slide handout should point to that exact release.
+Get the version used in this tutorial:
+
+```bash
+git clone --branch v0.1.0 https://github.com/alhedai1/codex-vasp-harness.git
+cd codex-vasp-harness
+```
+
+Or download the [v0.1.0 release](https://github.com/alhedai1/codex-vasp-harness/releases/tag/v0.1.0).
+Run the commands below from the repository root. For a versioned workshop use
+the tutorial tag rather than an evolving branch. Link the slides to that release.
 
 For an existing workspace, copy `tools/vasp/` into its `tools/` directory and
 merge the relevant instructions from AGENTS.md. Copy `controller/` only for

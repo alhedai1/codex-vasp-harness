@@ -11,3 +11,13 @@
 
 Do not screenshot secrets, tokens, full POTCAR contents or private host details.
 Protocol validation and compare are not implemented in this snapshot.
+
+## Links for the slides
+
+Repository: https://github.com/alhedai1/codex-vasp-harness
+Tutorial release: https://github.com/alhedai1/codex-vasp-harness/releases/tag/v0.1.0
+
+```bash
+git clone --branch v0.1.0 https://github.com/alhedai1/codex-vasp-harness.git
+cd codex-vasp-harness
+```
