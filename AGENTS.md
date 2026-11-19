@@ -12,7 +12,8 @@
   only when authorized. Never edit checked inputs to reuse a job directory.
 - Use result.json to distinguish validated results from failures. Passing execution
   gates does not establish numerical convergence or physical accuracy.
-- For authorized unattended tasks, read controller/README.md: write request.md
+- The controller is a standard part of this harness. For authorized submitted
+  batches, read controller/README.md: write request.md
   including objective, allowed calculations and stop condition; save waiting state,
   launch a persistent controller, and end the interactive turn. No active polling.
 - A background invocation reconstructs context from request.md and workflow/state.json,

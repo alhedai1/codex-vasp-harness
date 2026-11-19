@@ -1,6 +1,7 @@
-# Optional batch controller
+# Batch controller
 
-Run after completing the root README's VASP setup. Requires an installed,
+The controller is a standard component of the harness. Run after completing
+the root README's VASP setup. Requires an installed,
 authenticated Codex CLI (`codex --version`), Slurm access, and Python dependencies.
 The controller uses the account/environment of the process launching it.
 

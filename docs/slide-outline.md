@@ -6,7 +6,7 @@
 4. Rejected changed input before submission (fresh disposable directory).
 5. Cropped prepared.json/result.json: settings, potential identity, matching
    fingerprints, job ID, convergence verdict and energy with units.
-6. Optional controller: saved request/state, detached launch, report and complete
+6. Controller: saved request/state, detached launch, report and complete
    state. Explain fresh background Codex, batch barrier, and no notifications.
 
 Do not screenshot secrets, tokens, full POTCAR contents or private host details.
@@ -15,9 +15,9 @@ Protocol validation and compare are not implemented in this snapshot.
 ## Links for the slides
 
 Repository: https://github.com/alhedai1/codex-vasp-harness
-Tutorial release: https://github.com/alhedai1/codex-vasp-harness/releases/tag/v0.1.0
+Tutorial release: https://github.com/alhedai1/codex-vasp-harness/releases/tag/v0.1.1
 
 ```bash
-git clone --branch v0.1.0 https://github.com/alhedai1/codex-vasp-harness.git
+git clone --branch v0.1.1 https://github.com/alhedai1/codex-vasp-harness.git
 cd codex-vasp-harness
 ```

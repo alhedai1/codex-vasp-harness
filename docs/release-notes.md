@@ -1,10 +1,10 @@
-# v0.1.0
+# v0.1.1
 
-Initial teaching snapshot: four-command VASP interface, validation and provenance,
-editable Slurm template, public Si inputs, optional batch controller, and 21
-license-free unit tests. Runtime logic was exercised previously with separately
-licensed real Si calculations; output/potential files are not redistributed.
+The batch controller is a standard part of the harness. The main walkthrough now
+covers check -> submit -> persistent controller -> automatic Codex collection/report.
+Added existing-workspace clone/copy instructions, preservation of lab instructions
+and calculations, and an explicit reminder to configure VASP_BIN.
+Runtime code is unchanged from v0.1.0; all 21 license-free unit tests pass.
 
-Requirements pin the verified numpy and pymatgen versions. Adapt Slurm/MPI/VASP
-paths for each cluster. No protocol/compare command, notifications, automatic
-recovery, or live sidebar continuation is included in this snapshot.
+No notifications, protocol/compare command, or live sidebar continuation added.
+Previous v0.1.0 remains available as the original snapshot.
