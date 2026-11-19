@@ -4,7 +4,6 @@ Real POTCAR/XML parsing belongs to the user's separately licensed smoke test.
 from pathlib import Path
 from types import SimpleNamespace
 import json
-import shutil
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -12,14 +11,15 @@ import numpy as np
 from pymatgen.io.vasp import Incar, Kpoints, Poscar
 from tools.vasp import cli
 ROOT = Path(__file__).resolve().parents[1]
+INPUT_TEXT = {'POSCAR': 'Bulk Si diamond primitive cell; conventional a = 5.43 Angstrom\n1.0\n0.0000000000 2.7150000000 2.7150000000\n2.7150000000 0.0000000000 2.7150000000\n2.7150000000 2.7150000000 0.0000000000\nSi\n2\nDirect\n0.0000000000 0.0000000000 0.0000000000\n0.2500000000 0.2500000000 0.2500000000\n', 'INCAR': 'SYSTEM = Bulk Si primitive cell - PBE static\nISTART = 0\nICHARG = 2\nGGA = PE\nENCUT = 400\nPREC = Accurate\nEDIFF = 1E-6\nALGO = Normal\nNELM = 100\nISPIN = 1\nISMEAR = 0\nSIGMA = 0.05\nLREAL = .FALSE.\nIBRION = -1\nNSW = 0\nLWAVE = .FALSE.\nLCHARG = .FALSE.\n', 'KPOINTS': 'Gamma-centered 6x6x6 mesh\n0\nGamma\n6 6 6\n0 0 0\n'}
 
 class VaspTests(unittest.TestCase):
     def setUp(self):
         tmp=tempfile.TemporaryDirectory(dir=ROOT/'projects',prefix='test_vasp_')
         self.addCleanup(tmp.cleanup)
         self.job=Path(tmp.name)
-        for name in ('POSCAR','INCAR','KPOINTS'):
-            shutil.copy2(ROOT/'examples/si'/name,self.job/name)
+        for name, text in INPUT_TEXT.items():
+            (self.job/name).write_text(text)
         # No licensed or dummy POTCAR files: these tests exercise only gates.
         inputs=('POSCAR','INCAR','KPOINTS')
         p=patch.object(cli,'INPUTS',inputs);p.start();self.addCleanup(p.stop)

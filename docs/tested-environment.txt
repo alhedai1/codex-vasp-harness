@@ -1,3 +1,0 @@
-Python 3.11
-numpy==2.4.6
-pymatgen==2026.10.24

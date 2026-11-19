@@ -1,163 +1,98 @@
 # Codex VASP Harness
 
-A small teaching example for materials researchers using Codex with VASP and
-Slurm. Codex chooses the calculation; reusable commands check inputs, submit
-jobs, and validate/record results. The controller handles waiting and
-starts a fresh Codex process after a batch finishes.
+Reusable VASP commands with validation/provenance, plus a controller that waits
+for Slurm jobs and starts Codex again to collect results and continue the task.
+Both the VASP tool and controller are standard parts of the harness.
 
-## What is included
+## 1. Clone into your existing workspace
 
-- `tools/vasp/cli.py`: `check`, `submit`, `status`, `collect`.
-- `tools/vasp/submit.slurm`: editable cluster submission template.
-- `examples/si/`: public two-atom diamond-Si input geometry and tutorial settings.
-- `AGENTS.md`: instructions routing Codex through the tools.
-- `controller/`: automatic waiting and background continuation.
-- `tests/`: acceptance-gate tests with mocked parser/scheduler boundaries; no
-  licensed potentials or live scheduler required.
-
-No VASP executable, POTCAR, credentials, or calculation outputs are distributed.
-The MIT license applies to this code; obtain VASP and potentials separately.
-
-## 1. Get the code
-
-Get the version used in this tutorial:
+Run from your workspace root, where your AGENTS.md and projects/ live:
 
 ```bash
-git clone --branch v0.1.1 https://github.com/alhedai1/codex-vasp-harness.git
-cd codex-vasp-harness
-HARNESS_SOURCE="$PWD"
+git clone --branch v0.1.2 https://github.com/alhedai1/codex-vasp-harness.git harness-source
 ```
 
-Or download the [v0.1.1 release](https://github.com/alhedai1/codex-vasp-harness/releases/tag/v0.1.1).
-Run the commands below from the repository root. For a versioned workshop use
-the tutorial tag rather than an evolving branch. Link the slides to that release.
+## 2. Copy the two components
 
-### Add both components to an existing workspace
-
-From your existing workspace root (for example, `mmm12_tutorial`):
+Start without existing tools/vasp/ and controller/ directories. Back up old
+versions first if present; keep your projects, skills and existing environment.
 
 ```bash
-git clone --branch v0.1.1 https://github.com/alhedai1/codex-vasp-harness.git harness-source
 mkdir -p tools
 cp -R harness-source/tools/vasp tools/
 cp -R harness-source/controller .
-HARNESS_SOURCE="$PWD/harness-source"
 ```
 
-Start with no existing `tools/vasp` or `controller` directories: move old versions
-to a backup first. Copying into an existing directory can leave stale files.
-Keep your `projects/`, `.agents/skills/`, environments and calculation outputs.
-Keep your existing AGENTS.md and merge the supplied harness/controller instructions;
-do not overwrite your lab's instructions. Both components are part of this setup.
-Paths resolve relative to the installed tools' root. Continue from your workspace
-root, with tools and controller alongside projects (not inside harness-source).
-Example files and requirements are under harness-source/ in this installation mode.
+Your workspace now has:
 
-## 2. Prepare the environment
+```text
+AGENTS.md
+tools/vasp/cli.py
+tools/vasp/submit.slurm
+controller/cli.py
+projects/
+```
 
-Linux, Python **3.11+**, numpy, pymatgen, and Slurm command-line tools, an installed/authenticated Codex CLI, and a persistent
-execution mechanism are required. The documented detached launch uses Linux user
-systemd services. Check `codex --version` and `systemctl --user is-system-running`.
-Use your lab's existing compatible environment, or create an isolated one:
+Continue working in the workspace root, not inside harness-source/.
+
+## 3. Configure your cluster
+
+Edit tools/vasp/submit.slurm: partition, resources and the MPI launch line.
+In your active environment, set the path to your licensed VASP executable:
 
 ```bash
-conda create -n codex-vasp-harness python=3.11 pip
-conda activate codex-vasp-harness
-python -m pip install -r "$HARNESS_SOURCE/requirements.txt"
-(cd "$HARNESS_SOURCE" && python -m unittest discover -s tests -v)
+export VASP_BIN=/absolute/path/to/vasp_std
 ```
 
-These dependencies are for the harness, not a VASP installation. The environment
-used to verify this snapshot is recorded in docs/tested-environment.txt.
-
-## 3. Configure your cluster and the Si example
-
-Edit `tools/vasp/submit.slurm`: set partition, task count, memory, walltime and
-the MPI launcher your cluster supports. The one-task/ten-minute template is only
-a small demonstration. Load your VASP/MPI modules if required by your cluster.
-Set the executable path in the environment before submission:
+Use Python 3.11+ with numpy and pymatgen. If your environment lacks them:
 
 ```bash
-export VASP_BIN=/absolute/path/to/your/licensed/vasp_std
-mkdir -p projects/Si_example/static/run01
-cp "$HARNESS_SOURCE/examples/si/POSCAR" "$HARNESS_SOURCE/examples/si/INCAR" \
-  "$HARNESS_SOURCE/examples/si/KPOINTS" projects/Si_example/static/run01/
-cp tools/vasp/submit.slurm projects/Si_example/static/run01/
-cp "$HARNESS_SOURCE/examples/si/request.md" projects/Si_example/request.md
+python -m pip install -r harness-source/requirements.txt
 ```
 
-Place the **real authorized Si PAW_PBE POTCAR** in that job directory yourself.
-It must match POSCAR species order. Do not download an arbitrary potential,
-create a placeholder, or commit the licensed file. Read examples/si/README.md.
+The controller also needs an installed, authenticated Codex CLI, Slurm commands,
+and a persistent process. The supplied launch instructions use Linux user systemd:
+check `codex --version` and `systemctl --user is-system-running` on your server.
+Module-based clusters may require additional environment setup in the batch script
+and service. Supply your own licensed POTCARs; none are included here.
 
-## 4. Check, submit, and hand off to the controller
+## 4. Update AGENTS.md
 
-Codex can perform this sequence when you ask it to run the complete task using
-AGENTS.md. The commands below also make the handoff reproducible in a terminal:
+Merge the instructions from **harness-source/AGENTS.example.md** into your
+workspace's AGENTS.md. Replace older harness instructions if present; keep your
+lab-specific instructions. Do not overwrite the entire existing file.
 
-```bash
-python tools/vasp/cli.py check projects/Si_example/static/run01
-python tools/vasp/cli.py submit projects/Si_example/static/run01
-python -m controller.cli set-state projects/Si_example \
-  --status waiting --job static/run01 \
-  --next-action 'Collect and validate; write report.md; no further jobs.'
-systemd-run --user --unit=si-controller-demo --collect --no-block \
-  --working-directory="$PWD" --setenv=PATH="$PATH" \
-  --setenv=VASP_BIN="$VASP_BIN" \
-  "$(command -v python)" -B -m controller.cli run projects/Si_example
-```
+## 5. Ask Codex to run a small task
 
-Use a unique unit name for each task. The controller waits without LLM calls,
-then launches fresh Codex to run `collect`, interpret result.json, write report.md,
-and mark the task complete/failed. You do not need to ask Codex to collect later.
-For a new batch it repeats the handoff within the scope of request.md.
-Read controller/README.md for service prerequisites, logs and failure handling.
+For example:
 
-`status` and `collect` remain independently callable for inspection/debugging;
-normal unattended execution uses the controller for continuation.
+> Prepare and run a small static bulk-Si calculation using the VASP harness.
+> Launch the controller to collect and validate it automatically and write a
+> short report. No additional calculations after this test.
 
-| Command | What it verifies/records | Record |
+Codex prepares the inputs and runs check -> submit -> controller handoff.
+The controller waits without LLM calls, then starts fresh Codex to run collect,
+interpret the result and write the report. You do not need to request collection
+again. It does not wake the original sidebar chat or send completion notifications.
+
+| Command | Purpose | Saved record |
 |---|---|---|
-| check | Input consistency, method/settings, potential identities, file fingerprints | prepared.json |
-| submit | Checked inputs unchanged; no previous submission or outputs | submission.json |
-| status | Scheduler observation and exit code | scheduler.json |
-| collect | Scheduler outcome, output consistency, SCF/ionic convergence, energies/forces | result.json |
+| check | Check inputs; record settings and file fingerprints | prepared.json |
+| submit | Verify unchanged inputs; block repeat submission; submit to Slurm | submission.json |
+| status | Observe the recorded Slurm job | scheduler.json |
+| collect | Check completion/convergence and record energy/forces | result.json |
 
-`submit` requires the prior input snapshot and rechecks its hashes internally.
-Inputs cannot be changed after check; create a new directory for changed settings.
-Submission attempts are persisted before sbatch so interrupted submission cannot
-silently launch duplicate jobs. Inspect Slurm before manually recovering an attempt.
+Inspect projects/<task>/workflow/state.json and report.md for progress/results.
+Logs are under workflow/. The controller waits for the whole batch, including
+failures. It stops on errors instead of blindly retrying. See controller/README.md.
 
-Successful collection reports `status: validated`, `electronic_converged: true`,
-and an energy in eV per cell. This static example has `ionic_converged: null`.
-Do not present a successful run as cutoff/k-point convergence or physical validation.
-See tools/vasp/README.md for the complete supported scope and exit codes.
+## Scope
 
-## 5. Demonstrate a rejected change (no new calculation needed)
+Fresh-start periodic PBE/PBEsol PAW static calculations and IBRION=1/2/3 relaxations;
+uniform k meshes and whole-atom fixed/free constraints. Input generation and
+scientific decisions belong to Codex/researchers. Passing the checks does not
+establish cutoff/k-point convergence or physical accuracy. This is a teaching
+harness, not a security boundary. Protocol/compare commands are not implemented.
 
-Use another disposable fresh input directory, copy the example and real local
-POTCAR into it, and run check. Change ENCUT in its INCAR, then run submit.
-The tool refuses the changed inputs **before sbatch**. Do not edit a completed run.
-A file hash is a fingerprint connecting each result to the checked input files.
-
-This enforces consistency within the tool workflow, not a security boundary:
-Codex with write/shell access can modify or bypass scripts. AGENTS.md routes it
-through the interface; validation code supplies deterministic acceptance gates.
-
-## 6. Follow the completed workflow
-
-Read `projects/Si_example/workflow/state.json` and `projects/Si_example/report.md`.
-The controller and background Codex logs are in the task's workflow/ directory.
-The original sidebar conversation is not resumed. **Notifications are not
-implemented**: execution and continuation are automatic, but completion is
-visible in the saved state/report rather than through an alert.
-
-## Scope of this tutorial release
-
-Fresh-start periodic PBE/PBEsol PAW calculations, explicit uniform k meshes,
-static jobs and IBRION=1/2/3 relaxations; whole-atom fixed/free constraints.
-Electronic restarts, partial-direction constraints and unsupported methods are
-rejected explicitly. No automatic scientific recovery is performed.
-
-Configurable scientific protocols and cross-calculation `compare` are proposed
-next steps, **not commands in this release**. It is not a universal DFT validator.
+Tests are for maintainers and are not part of installation:
+`python -B -m unittest discover -s tests -v` from the repository root.
